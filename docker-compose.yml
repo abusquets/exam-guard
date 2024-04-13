@@ -1,0 +1,118 @@
+services:
+  base_image:
+    image: base_image
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        POETRY_DEV: ${POETRY_DEV:-true}
+        WAIT_BIN: ${WAIT_BIN:-wait}
+    command: []
+    entrypoint: "sh"
+
+  api:
+    image: base_image
+    env_file:
+      - env-api-dev
+    environment:
+      LOADFIXTURES: ${LOADFIXTURES:-false}
+      DEBUGPY: ${DEBUGPY:-true}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
+      WAIT_HOSTS: postgres:5432,postgres-test:5432
+      WAIT_LOGGER_LEVEL: error
+      WAIT_TIMEOUT: 60
+      WAIT_SLEEP_INTERVAL: 5
+      PYDEVD_DISABLE_FILE_VALIDATION: 1
+    depends_on:
+      - base_image
+      - postgres
+    volumes:
+      - ./src/:/app:cached
+    ports:
+      - 8000:80
+      - 5678:5678 # debupy for webapp
+      - 5679:5679 # debupy for console
+    command: run-devel
+    restart: on-failure
+
+  # asgi:
+  #   # TODO: Use specific build
+  #   image: base_image
+  #   env_file:
+  #     - env-api-dev
+  #   environment:
+  #     DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
+  #     WAIT_HOSTS: postgres:5432,postgres-test:5432
+  #     WAIT_LOGGER_LEVEL: error
+  #     WAIT_TIMEOUT: 60
+  #     WAIT_SLEEP_INTERVAL: 5
+  #     PYDEVD_DISABLE_FILE_VALIDATION: 1
+  #   depends_on:
+  #     - base_image
+  #     - postgres
+  #   volumes:
+  #     - ./src/:/app:cached
+  #   ports:
+  #     - 8001:80
+  #   command: run-asgi
+  #   restart: on-failure
+
+  worker:
+    image: base_image
+    env_file:
+      - env-api-dev
+    environment:
+      DEBUGPY: ${DEBUGPY:-true}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
+      WAIT_HOSTS: postgres:5432,postgres-test:5432
+      WAIT_LOGGER_LEVEL: error
+      WAIT_TIMEOUT: 60
+      WAIT_SLEEP_INTERVAL: 5
+      PYDEVD_DISABLE_FILE_VALIDATION: 1
+    depends_on:
+      - base_image
+      - postgres
+    volumes:
+      - ./src/:/app:cached
+    # command: bash -c "python app/worker.py"
+    # restart: on-failure
+
+    command:
+      - /bin/sh
+      - -c
+      - |
+        /wait && watchmedo auto-restart --directory=/app --pattern="*.py;*.yaml" --recursive -- \
+        /bin/bash -c 'sleep 5; python app/worker.py'
+
+  postgres:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB-exam_guard}
+      POSTGRES_USER: ${POSTGRES_USER-exam_guard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD-exam_guard}
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:delegated
+      - ./data/exam_guard_start.sql:/docker-entrypoint-initdb.d/00_exam_guard_start.sql
+      - ./data:/data
+
+  postgres-test:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB-exam_guard}
+      POSTGRES_USER: ${POSTGRES_USER-exam_guard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD-exam_guard}
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data:delegated
+      - ./data/exam_guard_start.sql:/docker-entrypoint-initdb.d/00_exam_guard_start.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER-exam_guard}"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    command: postgres -c 'max_connections=844'
+
+volumes:
+  postgres_data:
+  postgres_test_data:
