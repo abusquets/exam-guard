@@ -78,6 +78,7 @@ class MonitorAlertUseCase:
                 itimes = 0
 
         if itimes >= interval:
+            logger.warning('Suspicious data')
             return threshold_data
         return None
 

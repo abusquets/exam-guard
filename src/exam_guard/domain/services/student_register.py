@@ -17,11 +17,3 @@ class StudentRegisterService:
     async def curentlly_active_students(self) -> List[StudentRegisterEntity]:
         filter_by = StudentRegisterFilter(active=True)
         return await self._student_register_repository.list_filter(filter_by)
-
-    # async def add_monitor_data(self, in_dto: MonitorDataInDTO) -> None:
-    #     create_dto = CreateMonitorDataDTO(
-    #         monitor_id=in_dto.eui,
-    #         data=in_dto.model_dump(),
-    #         ts=in_dto.ts
-    #     )
-    #     await self._monitor_data_repository.create(create_dto)
