@@ -25,6 +25,7 @@ services:
       PYDEVD_DISABLE_FILE_VALIDATION: 1
     depends_on:
       - base_image
+      - rabbit
       - postgres
     volumes:
       - ./src/:/app:cached
@@ -64,6 +65,7 @@ services:
     environment:
       DEBUGPY: ${DEBUGPY:-true}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
+      BROKER_URL: "amqp://admin:1234@rabbit:5672/test"
       WAIT_HOSTS: postgres:5432,postgres-test:5432
       WAIT_LOGGER_LEVEL: error
       WAIT_TIMEOUT: 60
@@ -74,9 +76,6 @@ services:
       - postgres
     volumes:
       - ./src/:/app:cached
-    # command: bash -c "python app/worker.py"
-    # restart: on-failure
-
     command:
       - /bin/sh
       - -c
@@ -97,6 +96,21 @@ services:
       - ./data/exam_guard_start.sql:/docker-entrypoint-initdb.d/00_exam_guard_start.sql
       - ./data:/data
 
+  rabbit:
+    container_name: rabbit
+    image: rabbitmq:3.10.5-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: 1234
+      RABBITMQ_DEFAULT_VHOST: test
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error}] -rabbitmq_management"
+    ports:
+      - 5672:5672 # AMQP protocol port
+      - 15672:15672 # HTTP management UI
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq/mnesia:delegated # Persistent local volume
+      - ./rabbit.conf:/etc/rabbitmq/rabbitmq.conf # RabbitMQ configuration file
+
   postgres-test:
     image: timescale/timescaledb:latest-pg16
     environment:
@@ -116,3 +130,4 @@ services:
 volumes:
   postgres_data:
   postgres_test_data:
+  rabbit_data:

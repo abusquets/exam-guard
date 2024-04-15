@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     DATABASE_URL: str = 'postgresql+asyncpg://postgres:change-me@postgres:5432/postgres'
+    BROKER_URL: str = 'amqp://admin:1234@rabbit:5672/test'
 
 
 settings = Settings()
