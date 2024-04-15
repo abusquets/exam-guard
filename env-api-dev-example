@@ -1,0 +1,4 @@
+APP_ENV=dev
+DEBUG=true
+# SqlAchemy Verbose
+SA_ECHO=true
