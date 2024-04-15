@@ -154,6 +154,7 @@ pytest = "^7.4.4"
 dpath = "^2.1.6"
 faststream = {extras = ["rabbit"], version = "^0.5.0"}
 fast-depends = "^2.4.2"
+aiohttp = "^3.9.4"
 
 [tool.poetry.group.dev.dependencies]
 debugpy = "^1.8.1"

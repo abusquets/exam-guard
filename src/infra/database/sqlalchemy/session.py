@@ -45,7 +45,7 @@ class Database(AbstractDatabase):
             session = self._session_factory()
             db_session['session'] = session
             await session.begin()
-            logger.debug('session begin', extra={'level': db_session['level']})
+            logger.debug('Session begin', extra={'level': db_session['level']})
 
         else:
             session = db_session['session']
@@ -57,18 +57,16 @@ class Database(AbstractDatabase):
         except Exception:
             logger.exception('Session rollback because of exception')
             await session.rollback()
-            logger.debug('session rollback')
+            logger.debug('Session rollback')
             raise
         else:
-            # db_session = db_session_context.get() or {'session': None, 'level': 0}
             if db_session['level'] == 0:
                 await session.commit()
-                logger.debug('session commit', extra={'level': db_session['level']})
+                logger.debug('Session commit', extra={'level': db_session['level']})
         finally:
-            # db_session = db_session_context.get() or {'session': None, 'level': 0}
             if db_session['level'] == 0:
                 await session.close()
-                logger.debug('session close', extra={'level': db_session['level']})
+                logger.debug('Session close', extra={'level': db_session['level']})
                 db_session_context.set(None)
             else:
                 db_session['level'] = (db_session['level'] or 0) - 1
