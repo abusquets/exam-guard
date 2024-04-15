@@ -36,27 +36,28 @@ services:
     command: ["sh", "-c", "/wait && bash -c '/entrypoint.sh run-devel'"]
     restart: on-failure
 
-  # asgi:
-  #   # TODO: Use specific build
-  #   image: base_image
-  #   env_file:
-  #     - env-api-dev
-  #   environment:
-  #     DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
-  #     WAIT_HOSTS: postgres:5432,postgres-test:5432
-  #     WAIT_LOGGER_LEVEL: error
-  #     WAIT_TIMEOUT: 60
-  #     WAIT_SLEEP_INTERVAL: 5
-  #     PYDEVD_DISABLE_FILE_VALIDATION: 1
-  #   depends_on:
-  #     - base_image
-  #     - postgres
-  #   volumes:
-  #     - ./src/:/app:cached
-  #   ports:
-  #     - 8001:80
-  #   command: run-asgi
-  #   restart: on-failure
+  asgi:
+    # TODO: Use specific build
+    image: base_image
+    env_file:
+      - env-api-dev
+    environment:
+      DEBUGPY: ${DEBUGPY:-true}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
+      WAIT_HOSTS: postgres:5432,rabbit:5672
+      WAIT_LOGGER_LEVEL: error
+      WAIT_TIMEOUT: 60
+      WAIT_SLEEP_INTERVAL: 5
+      PYDEVD_DISABLE_FILE_VALIDATION: 1
+    depends_on:
+      - base_image
+      - postgres
+    volumes:
+      - ./src/:/app:cached
+    ports:
+      - 8001:80
+    command: ["sh", "-c", "/wait && bash -c '/entrypoint.sh run-asgi'"]
+    restart: on-failure
 
   worker:
     image: base_image
@@ -89,12 +90,17 @@ services:
       POSTGRES_DB: ${POSTGRES_DB-exam_guard}
       POSTGRES_USER: ${POSTGRES_USER-exam_guard}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD-exam_guard}
+    # ALTER SYSTEM SET max_connections = 844;
+    # show max_connections;
+    command: postgres -c 'max_connections=844'
     ports:
       - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data:delegated
       - ./data/exam_guard_start.sql:/docker-entrypoint-initdb.d/00_exam_guard_start.sql
       - ./data:/data
+    stdin_open: true
+    tty: true
 
   rabbit:
     container_name: rabbit
