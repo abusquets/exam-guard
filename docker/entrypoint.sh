@@ -5,7 +5,6 @@ set -e
 case $1 in
     load-fixtures)
         echo "→ Run load fixtures"
-        sleep 3
         exec bash -c 'python fixtures/load_master_data.py && python fixtures/load_monitor_data.py'
         ;;
 

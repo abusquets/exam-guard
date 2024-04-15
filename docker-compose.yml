@@ -18,8 +18,8 @@ services:
       LOADFIXTURES: ${LOADFIXTURES:-false}
       DEBUGPY: ${DEBUGPY:-true}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
-      WAIT_HOSTS: postgres:5432,postgres-test:5432
-      WAIT_LOGGER_LEVEL: error
+      WAIT_HOSTS: postgres:5432,postgres-test:5432,rabbit:5672
+      WAIT_LOGGER_LEVEL: debug
       WAIT_TIMEOUT: 60
       WAIT_SLEEP_INTERVAL: 5
       PYDEVD_DISABLE_FILE_VALIDATION: 1
@@ -32,7 +32,7 @@ services:
       - 8000:80
       - 5678:5678 # debupy for webapp
       - 5679:5679 # debupy for console
-    command: run-devel
+    command: ["sh", "-c", "/wait && bash -c '/entrypoint.sh run-devel'"]
     restart: on-failure
 
   # asgi:
