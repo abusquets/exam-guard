@@ -152,6 +152,8 @@ faker = "22.0.0"
 anyio = "^4.2.0"
 pytest = "^7.4.4"
 dpath = "^2.1.6"
+faststream = {extras = ["rabbit"], version = "^0.5.0"}
+fast-depends = "^2.4.2"
 
 [tool.poetry.group.dev.dependencies]
 debugpy = "^1.8.1"

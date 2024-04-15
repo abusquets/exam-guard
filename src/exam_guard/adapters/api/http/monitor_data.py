@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 
@@ -32,3 +32,21 @@ async def add_monitor_data(
         container.monitor_data_repository,
     )
     await service.add_monitor_data(in_dto)
+
+
+@router.post(
+    '/stream',
+    response_class=JSONResponse,
+    status_code=204,
+    responses={
+        204: {'description': 'Item created'},
+        422: {'description': 'Unprocessable Entity'},
+    },
+)
+async def add_monitor_data_stream(
+    request: Request,
+    request_data: MonitorDataRequestDTO,
+    _: Session = Depends(check_access_token),
+) -> None:
+    in_dto = MonitorDataInDTO.model_validate(request_data.model_dump())
+    await request.app.state.broker.publish(in_dto.model_dump_json(), 'test')
