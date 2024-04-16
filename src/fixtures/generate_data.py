@@ -75,6 +75,32 @@ def generate_heart_rate_data(
     return data
 
 
+def nine_minutes_heart_rate_x_minute() -> List[Tuple[int, float]]:
+    interval_changes = [
+        # 0 minutes
+        0,
+        # 1 minute 0 seconds
+        0,
+        # 2 minutes 0 seconds
+        0,
+        # 3 minutes 0 seconds
+        4,
+        # 4 minutes 0 seconds
+        31,
+        # 5 minutes 0 seconds
+        33,
+        # 6 minutes 0 seconds
+        18,
+        # 7 minutes 0 seconds
+        5,
+        # 8 minutes 0 seconds
+        0.5,
+        # 9 minutes 0 seconds
+        0,
+    ]
+    return generate_heart_rate_data(interval_changes)
+
+
 def nine_minutes_blood_pressure() -> List[Tuple[int, float]]:
     interval_changes = [
         # 0 minutes
@@ -169,16 +195,22 @@ def nine_minutes_heart_rate() -> List[Tuple[int, float]]:
     return ret
 
 
-def expand_to_3_hours(example: List[Tuple[int, float]], duration: int = 3) -> List[Tuple[int, float]]:
-    data = []
+def expand_to_3_hours(
+    example: List[Tuple[int, float]],
+    duration: int = 3,
+    *,
+    unit: int = 1,  # seconds
+) -> List[Tuple[int, float]]:
     ts_start = int(time.time())
+    data = []
     num_examples = len(example)
     duration_seconds = duration * 60 * 60  # 3 hours in seconds
 
     for i in range(duration_seconds):
         ts = ts_start + i
         sample_index = i % num_examples
-        data.append((ts, example[sample_index][1]))
+        if unit == 1 or not (i % unit):
+            data.append((ts, example[sample_index][1]))
 
     logger.info(f'DIFF: {data[-1][0] - ts_start}')
     logger.info(f'FROM: {datetime.datetime.fromtimestamp(data[0][0])}')

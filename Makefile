@@ -13,8 +13,11 @@ background:
 debugpy:
 	@DEBUGPY=True docker compose up
 
-load_fixtures:
+load_data:
 	@docker compose exec api python fixtures/load_master_data.py
+	@docker compose exec api python fixtures/load_monitor_data.py
+
+load_fixtures:
 	@docker compose exec api python fixtures/load_monitor_data.py
 
 stop:

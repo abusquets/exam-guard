@@ -6,7 +6,12 @@ from typing import Callable, List, Tuple, Union
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
-from fixtures.generate_data import expand_to_3_hours, nine_minutes_blood_pressure, nine_minutes_heart_rate
+from fixtures.generate_data import (
+    expand_to_3_hours,
+    nine_minutes_blood_pressure,
+    nine_minutes_heart_rate,
+    nine_minutes_heart_rate_x_minute,
+)
 
 from config import settings
 
@@ -17,13 +22,28 @@ logger = logging.getLogger(f'{settings.APP_LOGGER_NAME}.fixtures')
 engine: AsyncEngine = create_async_engine(settings.DATABASE_URL, echo=True, future=True)
 
 
-def heart_rate_monitor_payload(ts: int, value: float) -> dict:
-    return {'eui': '77c91e84-838e-4699-ab6d-a85e4b9db69f', 'model': 'X1-S/1.0', 'pulse': value, 'ts': ts}
+SAMSUNG_X1S = '6ea67f1e-fc9b-4c36-a808-21259b93f8f9'
+POLAR_MX = '77c91e84-838e-4699-ab6d-a85e4b9db69f'
+SAMSUNG_BPA = '539c9710-90d2-407b-89fb-643a6637506a'
 
 
-def blood_pressure_monitor_payload(ts: int, value: float) -> dict:
+def polar_mx_payload(ts: int, value: float) -> dict:
+    return {'eui': SAMSUNG_X1S, 'model': 'X1-S/1.0', 'pulse': value, 'ts': ts}
+
+
+def samsung_x1s_payload(ts: int, value: float) -> dict:
     return {
-        'eui': '539c9710-90d2-407b-89fb-643a6637506a',
+        'eui': POLAR_MX,
+        'model': 'X1-S',
+        'version': '1.1',
+        'payload': {'hr': value, 'hrt': 1},
+        'ts': ts,
+    }
+
+
+def samsung_bpa_payload(ts: int, value: float) -> dict:
+    return {
+        'eui': SAMSUNG_BPA,
         'model': 'BPA',
         'payload': {'bp_sys': value, 'bp_dia': 1},
         'ts': ts,
@@ -51,25 +71,32 @@ async def truncate(conn: AsyncConnection) -> None:
     await conn.execute(text(sql))
 
 
-async def populate_blood_pressure(conn: AsyncConnection) -> None:
-    example = nine_minutes_blood_pressure()
-    data = expand_to_3_hours(example)
-    await sql_insert_monitor_data(conn, '539c9710-90d2-407b-89fb-643a6637506a', data, blood_pressure_monitor_payload)
-
-
-async def populate_heart_rate(conn: AsyncConnection) -> None:
+async def populate_polar_mx_payload(conn: AsyncConnection) -> None:
     example = nine_minutes_heart_rate()
     data = expand_to_3_hours(example)
-    await sql_insert_monitor_data(conn, '77c91e84-838e-4699-ab6d-a85e4b9db69f', data, heart_rate_monitor_payload)
+    await sql_insert_monitor_data(conn, POLAR_MX, data, polar_mx_payload)
+
+
+async def populate_samsung_bpa_payload(conn: AsyncConnection) -> None:
+    example = nine_minutes_blood_pressure()
+    data = expand_to_3_hours(example)
+    await sql_insert_monitor_data(conn, SAMSUNG_BPA, data, samsung_bpa_payload)
+
+
+async def populate_samsung_x1s_payload(conn: AsyncConnection) -> None:
+    example = nine_minutes_heart_rate_x_minute()
+    data = expand_to_3_hours(example, unit=60)
+    await sql_insert_monitor_data(conn, SAMSUNG_X1S, data, samsung_x1s_payload)
 
 
 async def main() -> None:
     async with engine.begin() as conn:
         await truncate(conn)
     async with engine.begin() as conn:
-        task1 = asyncio.create_task(populate_heart_rate(conn))
-        task2 = asyncio.create_task(populate_blood_pressure(conn))
-        await asyncio.gather(task1, task2)
+        task0 = asyncio.create_task(populate_samsung_x1s_payload(conn))
+        task1 = asyncio.create_task(populate_polar_mx_payload(conn))
+        task2 = asyncio.create_task(populate_samsung_bpa_payload(conn))
+        await asyncio.gather(task0, task1, task2)
 
 
 if __name__ == '__main__':

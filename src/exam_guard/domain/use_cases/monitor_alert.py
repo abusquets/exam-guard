@@ -108,9 +108,11 @@ class MonitorAlertUseCase:
         logger.debug(
             f'Found {len(monitor_data)} items to check',
             extra={
-                'monitor': str(self.monitor.monitor.eui),
+                'monitor': self.monitor.monitor.eui.hex,
                 'ts_start': ts_start,
                 'ts_end': ts_end,
+                'value_xpath': self.monitor.value_xpath,
+                'example': monitor_data[0] if monitor_data else None,
             },
         )
 
