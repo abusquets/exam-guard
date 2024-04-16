@@ -7,6 +7,10 @@ build:
 run:
 	@docker compose up
 
+restart:
+	@docker-compose stop
+	@docker-compose up --no-deps
+
 background:
 	@docker compose up -d
 
