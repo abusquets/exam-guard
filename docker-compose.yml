@@ -92,7 +92,7 @@ services:
 
   postgres:
     container_name: exam-guard-postgres
-    image: timescale/timescaledb:latest-pg16
+    image: postgres:16.1
     environment:
       POSTGRES_DB: ${POSTGRES_DB-exam_guard}
       POSTGRES_USER: ${POSTGRES_USER-exam_guard}
@@ -111,7 +111,7 @@ services:
 
   postgres-test:
     container_name: exam-guard-postgres-test
-    image: timescale/timescaledb:latest-pg16
+    image: postgres:16.1
     environment:
       POSTGRES_DB: ${POSTGRES_DB-exam_guard}
       POSTGRES_USER: ${POSTGRES_USER-exam_guard}
