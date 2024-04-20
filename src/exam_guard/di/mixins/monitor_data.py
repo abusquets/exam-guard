@@ -8,4 +8,4 @@ class MonitorDataContainerMixin:
     monitor_data_repository: AbstractMonitorDataRepository
 
     def _get_monitor_data_repository(self) -> AbstractMonitorDataRepository:
-        return MonitorDataRepository(self.db.session)
+        return MonitorDataRepository(self.db.create_session)

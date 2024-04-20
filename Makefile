@@ -24,7 +24,7 @@ load_data:
 load_fixtures:
 	@docker compose exec api python fixtures/load_monitor_data.py
 
-stop:
+down:
 	@docker compose down
 
 shell:

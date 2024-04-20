@@ -43,7 +43,7 @@ loggers:
     urllib3:
         level: ERROR
     aio_pika:
-        level: INFO
+        level: DEBUG
     infra.database.sqlalchemy.session:
         level: INFO
     sqlalchemy.engine:

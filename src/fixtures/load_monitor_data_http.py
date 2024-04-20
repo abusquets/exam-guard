@@ -41,7 +41,7 @@ async def populate_samsung_x1s_payload() -> list:
     return [samsung_x1s_payload(ts, value) for ts, value in data]
 
 
-async def send_data_to_endpoint_in_batches(data_payloads: List[dict], batch_size: int = 500) -> None:
+async def send_data_to_endpoint_in_batches(data_payloads: List[dict], batch_size: int = 1000) -> None:
     endpoint = 'http://127.0.0.1:80/exam-guard/monitor-data/stream'
     headers = {'Authorization': 'Bearer faketoken'}
 

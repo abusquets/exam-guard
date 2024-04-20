@@ -21,6 +21,7 @@ router = APIRouter(prefix='/monitor-data')
         204: {'description': 'Item created'},
         422: {'description': 'Unprocessable Entity'},
     },
+    description='Add monitor data directly to the database',
 )
 async def add_monitor_data(
     request_data: MonitorDataRequestDTO,
@@ -42,6 +43,7 @@ async def add_monitor_data(
         204: {'description': 'Item created'},
         422: {'description': 'Unprocessable Entity'},
     },
+    description='Add monitor data to database via a message broker',
 )
 async def add_monitor_data_stream(
     request: Request,
@@ -49,4 +51,4 @@ async def add_monitor_data_stream(
     _: Session = Depends(check_access_token),
 ) -> None:
     in_dto = MonitorDataInDTO.model_validate(request_data.model_dump())
-    await request.app.state.broker.publish(in_dto.model_dump_json(), 'test')
+    await request.app.state.publisher_task.publish(in_dto.model_dump(), routing_key='task-key')

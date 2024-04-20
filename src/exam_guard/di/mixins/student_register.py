@@ -8,4 +8,4 @@ class StudentRegisterContainerMixin:
     student_register_repository: AbstractStudentRegisterRepository
 
     def _get_student_register_repository(self) -> AbstractStudentRegisterRepository:
-        return StudentRegisterRepository(self.db.session)
+        return StudentRegisterRepository(self.db.create_session)

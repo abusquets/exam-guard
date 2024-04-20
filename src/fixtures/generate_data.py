@@ -1,4 +1,3 @@
-import datetime
 import logging
 import time
 from typing import List, Tuple, Union
@@ -206,14 +205,10 @@ def expand_to_3_hours(
     num_examples = len(example)
     duration_seconds = duration * 60 * 60  # 3 hours in seconds
 
-    for i in range(duration_seconds):
+    for i in range(0, duration_seconds, unit):
         ts = ts_start + i
-        sample_index = i % num_examples
-        if unit == 1 or not (i % unit):
-            data.append((ts, example[sample_index][1]))
-
-    logger.info(f'DIFF: {data[-1][0] - ts_start}')
-    logger.info(f'FROM: {datetime.datetime.fromtimestamp(data[0][0])}')
-    logger.info(f'TO: {datetime.datetime.fromtimestamp(data[-1][0])}')
+        sample_index = i // unit % num_examples  # Combined calculation
+        value = example[sample_index][1]
+        data.append((ts, value))
 
     return data

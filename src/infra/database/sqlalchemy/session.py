@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+POOL_SIZE = 5
+
+
 db_session_context: contextvars.ContextVar = contextvars.ContextVar('db_ctx', default={'session': None, 'level': 0})
 
 
@@ -25,20 +28,20 @@ SA_ECHO: Final[bool] = os.getenv('SA_ECHO', 'False').lower() == 'true'
 
 class AbstractDatabase(abc.ABC):
     @abc.abstractmethod
-    def session(self) -> AsyncContextManager[AsyncSession]: ...
+    def create_session(self) -> AsyncContextManager[AsyncSession]: ...
 
 
 class Database(AbstractDatabase):
     def __init__(self) -> None:
         self.engine: AsyncEngine = create_async_engine(
-            settings.DATABASE_URL, echo=SA_ECHO, future=True, pool_size=5, max_overflow=15, pool_recycle=3600
+            settings.DATABASE_URL, echo=SA_ECHO, future=True, pool_size=POOL_SIZE, max_overflow=15, pool_recycle=3600
         )
         self._session_factory = async_sessionmaker(
             self.engine, class_=AsyncSession, autocommit=False, autoflush=False, expire_on_commit=False
         )
 
     @asynccontextmanager
-    async def session(self) -> AsyncIterator[AsyncSession]:
+    async def create_session(self) -> AsyncIterator[AsyncSession]:
         db_session: Optional[Dict[str, Any]] = None
         db_session = db_session_context.get() or {'session': None, 'level': 0}
         if db_session['level'] == 0:
@@ -49,7 +52,7 @@ class Database(AbstractDatabase):
 
         else:
             session = db_session['session']
-            db_session['level'] = (db_session['level'] or 0) + 1
+            db_session['level'] = (db_session.get('level') or 0) + 1
         db_session_context.set(db_session)
 
         try:
@@ -69,5 +72,5 @@ class Database(AbstractDatabase):
                 logger.debug('Session close', extra={'level': db_session['level']})
                 db_session_context.set(None)
             else:
-                db_session['level'] = (db_session['level'] or 0) - 1
+                db_session['level'] = (db_session.get('level') or 0) - 1
                 db_session_context.set(db_session)

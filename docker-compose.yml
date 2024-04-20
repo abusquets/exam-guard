@@ -11,6 +11,7 @@ services:
     entrypoint: "sh"
 
   api:
+    container_name: exam-guard-api
     image: base_image
     env_file:
       - env-api-dev
@@ -19,6 +20,7 @@ services:
       DEBUGPY: ${DEBUGPY:-true}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
       WAIT_HOSTS: postgres:5432,postgres-test:5432,rabbit:5672
+      START_RABBIT: true
       WAIT_LOGGER_LEVEL: debug
       WAIT_TIMEOUT: 60
       WAIT_SLEEP_INTERVAL: 5
@@ -37,6 +39,7 @@ services:
     restart: on-failure
 
   asgi:
+    container_name: exam-guard-asgi
     # TODO: Use specific build
     image: base_image
     env_file:
@@ -44,6 +47,7 @@ services:
     environment:
       DEBUGPY: ${DEBUGPY:-true}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
+      START_RABBIT: false
       WAIT_HOSTS: postgres:5432,rabbit:5672
       WAIT_LOGGER_LEVEL: error
       WAIT_TIMEOUT: 60
@@ -56,10 +60,12 @@ services:
       - ./src/:/app:cached
     ports:
       - 8001:80
-    command: ["sh", "-c", "/wait && bash -c '/entrypoint.sh run-asgi'"]
-    restart: on-failure
+    # command: ["sh", "-c", "/wait && bash -c '/entrypoint.sh run-asgi'"]
+    command: ["sh"]
+    # restart: on-failure
 
   worker:
+    container_name: exam-guard-worker
     image: base_image
     env_file:
       - env-api-dev
@@ -79,20 +85,21 @@ services:
       - ./src/:/app:cached
     command:
       - /bin/sh
-      - -c
-      - |
-        /wait && watchmedo auto-restart --directory=/app --pattern="*.py;*.yaml" --recursive -- \
-        /bin/bash -c 'sleep 5; python app/worker.py'
+      # - -c
+      # - |
+      #   /wait && watchmedo auto-restart --directory=/app --pattern="*.py;*.yaml" --recursive -- \
+      #   /bin/bash -c 'sleep 5; python app/worker.py'
 
   postgres:
+    container_name: exam-guard-postgres
     image: timescale/timescaledb:latest-pg16
     environment:
       POSTGRES_DB: ${POSTGRES_DB-exam_guard}
       POSTGRES_USER: ${POSTGRES_USER-exam_guard}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD-exam_guard}
-    # ALTER SYSTEM SET max_connections = 844;
+    # ALTER SYSTEM SET max_connections = 250;
     # show max_connections;
-    command: postgres -c 'max_connections=844'
+    command: postgres -c 'max_connections=250'
     ports:
       - 5432:5432
     volumes:
@@ -102,22 +109,8 @@ services:
     stdin_open: true
     tty: true
 
-  rabbit:
-    container_name: rabbit
-    image: rabbitmq:3.10.5-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: 1234
-      RABBITMQ_DEFAULT_VHOST: test
-      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error}] -rabbitmq_management"
-    ports:
-      - 5672:5672 # AMQP protocol port
-      - 15672:15672 # HTTP management UI
-    volumes:
-      - rabbit_data:/var/lib/rabbitmq/mnesia:delegated # Persistent local volume
-      - ./rabbit.conf:/etc/rabbitmq/rabbitmq.conf # RabbitMQ configuration file
-
   postgres-test:
+    container_name: exam-guard-postgres-test
     image: timescale/timescaledb:latest-pg16
     environment:
       POSTGRES_DB: ${POSTGRES_DB-exam_guard}
@@ -132,6 +125,24 @@ services:
       retries: 5
       start_period: 5s
     command: postgres -c 'max_connections=844'
+
+  rabbit:
+    container_name: exam-guard-rabbit
+    image: rabbitmq:3.10.5-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: 1234
+      RABBITMQ_DEFAULT_VHOST: test
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error}] -rabbitmq_management"
+      # RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error}] -rabbitmq_management -rabbitmq_management load_definitions "/tmp/definitions.json"
+
+    ports:
+      - 5672:5672 # AMQP protocol port
+      - 15672:15672 # HTTP management UI
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq/mnesia:delegated # Persistent local volume
+      - ./rabbit.conf:/etc/rabbitmq/rabbitmq.conf # RabbitMQ configuration file
+      - ./rabbit_definitions.json:/tmp/definitions.json
 
 volumes:
   postgres_data:
