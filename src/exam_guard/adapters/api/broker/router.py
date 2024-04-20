@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from faststream.rabbit import ExchangeType, RabbitExchange, RabbitQueue
 from faststream.rabbit.fastapi import (
     Logger,
@@ -80,11 +81,13 @@ async def handle_event(
     #         lambda: AppContainer().monitor_data_repository
     #     )
     # ],
+    # See: https://github.com/airtai/faststream/discussions/1387
+    monitor_data_repository: Annotated[AbstractMonitorDataRepository, Depends()],
     logger: Logger,
 ) -> None:
     try:
         service = MonitorDataService(
-            get_monitor_data_repository(),
+            monitor_data_repository,
         )
         await service.add_monitor_data(input)
     except Exception:
