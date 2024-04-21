@@ -144,6 +144,24 @@ services:
       - ./rabbit.conf:/etc/rabbitmq/rabbitmq.conf # RabbitMQ configuration file
       - ./rabbit_definitions.json:/tmp/definitions.json
 
+  jupyter:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile
+      # args:
+      #   POETRY_DEV: ${POETRY_DEV:-true}
+      #   WAIT_BIN: ${WAIT_BIN:-wait}
+    ports:
+      - 8888:8888
+    command:
+      [
+        "sh",
+        "-c",
+        "jupyter notebook --port 8888 --ip=* --no-browser --allow-root --NotebookApp.token=''",
+      ]
+    volumes:
+      - ./notebooks:/notebooks
+
 volumes:
   postgres_data:
   postgres_test_data:
