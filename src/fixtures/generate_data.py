@@ -1,5 +1,4 @@
 import logging
-import time
 from typing import List, Tuple, Union
 
 from config import settings
@@ -192,23 +191,3 @@ def nine_minutes_heart_rate() -> List[Tuple[int, float]]:
     ret = populate_missing_seconds(data)
     check_data(ret, 60, 30, 90)
     return ret
-
-
-def expand_to_3_hours(
-    example: List[Tuple[int, float]],
-    duration: int = 3,
-    *,
-    unit: int = 1,  # seconds
-) -> List[Tuple[int, float]]:
-    ts_start = int(time.time())
-    data = []
-    num_examples = len(example)
-    duration_seconds = duration * 60 * 60  # 3 hours in seconds
-
-    for i in range(0, duration_seconds, unit):
-        ts = ts_start + i
-        sample_index = i // unit % num_examples  # Combined calculation
-        value = example[sample_index][1]
-        data.append((ts, value))
-
-    return data

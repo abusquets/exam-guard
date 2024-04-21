@@ -6,10 +6,11 @@ import aiohttp
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
-from fixtures.generate_data import expand_to_3_hours, nine_minutes_heart_rate, nine_minutes_heart_rate_x_minute
+from fixtures.generate_data import nine_minutes_heart_rate, nine_minutes_heart_rate_x_minute
 from fixtures.load_monitor_data import polar_mx_payload, samsung_bpa_payload, samsung_x1s_payload
 
 from config import settings
+from utils.dataframe import expand_to_3_hours
 
 
 logger = logging.getLogger(f'{settings.APP_LOGGER_NAME}.fixtures')

@@ -2,9 +2,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from fixtures.generate_data import expand_to_3_hours, nine_minutes_heart_rate
+from fixtures.generate_data import nine_minutes_heart_rate
 
 from exam_guard.domain.use_cases.monitor_alert import MonitorAlertUseCase
+from utils.dataframe import expand_to_3_hours
 
 
 @pytest.mark.asyncio
@@ -14,7 +15,7 @@ class TestMonitorAlertUseCase:
         use_case = MonitorAlertUseCase(Mock(), 30)
 
         example = nine_minutes_heart_rate()
-        data = expand_to_3_hours(example, 1)
+        data = expand_to_3_hours(example, hours=1)
         start_value = data[0][1]
         threshold = 30
         threshold_value = start_value + (start_value * threshold / 100)

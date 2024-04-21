@@ -7,13 +7,13 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from fixtures.generate_data import (
-    expand_to_3_hours,
     nine_minutes_blood_pressure,
     nine_minutes_heart_rate,
     nine_minutes_heart_rate_x_minute,
 )
 
 from config import settings
+from utils.dataframe import expand_to_3_hours
 
 
 logger = logging.getLogger(f'{settings.APP_LOGGER_NAME}.fixtures')

@@ -1,9 +1,11 @@
-from fixtures.generate_data import expand_to_3_hours, nine_minutes_heart_rate
+from fixtures.generate_data import nine_minutes_heart_rate
+
+from utils.dataframe import expand_to_3_hours
 
 
 def test_expexpand_to_3_hours() -> None:
     example = nine_minutes_heart_rate()
-    data = expand_to_3_hours(example, 1)
+    data = expand_to_3_hours(example, hours=1)
     to_subtract = len(data) - (9 * 60) * (60 // 9)
     data = data[:-to_subtract]
     start_value = data[0][1]
