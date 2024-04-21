@@ -2,7 +2,7 @@ import datetime
 import logging
 import math
 import time
-from typing import List, Literal, Tuple
+from typing import List, Literal, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -71,3 +71,33 @@ def expand_to_3_hours_pandas(
 
     timestamps = timestamps.astype(int) // 10**9
     return list(zip(list(timestamps), values))
+
+
+def extract_outliers(
+    start_value: Union[int, float],
+    data: List[Tuple[int, Union[int, float]]],
+    threshold: Union[int, float],
+    interval: int,
+) -> Optional[List[Tuple[int, float]]]:
+    logger.debug('data', extra={'data': data})
+    itimes = 0
+    value_threshold = start_value + (start_value * threshold / 100)
+    threshold_data = []
+    for j in range(len(data)):
+        value = data[j][1]
+        increment = (value / start_value * 100) - 100
+        logger.debug(
+            f'Comparing value `{value}` againts value_threshold `{value_threshold}`'
+            f' increment `{increment}%`'
+            f' itimes `{itimes}`'
+        )
+        if value > value_threshold:
+            threshold_data.append(data[j])
+            itimes += 1
+        else:
+            itimes = 0
+
+    if itimes >= interval:
+        logger.warning('Suspicious data')
+        return threshold_data
+    return None

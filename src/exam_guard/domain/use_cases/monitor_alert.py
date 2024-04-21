@@ -1,7 +1,7 @@
 import datetime
 import logging
 import time
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 import uuid as uuid_lib
 
 import dpath
@@ -10,6 +10,7 @@ from config import settings
 from exam_guard.domain.entities.monitor_data import MonitorDataEntity
 from exam_guard.domain.entities.student_register import MonitorRegisterEntity
 from exam_guard.domain.ports.repositories.monitor_data import AbstractMonitorDataRepository, MonitorDataFilter
+from utils.dataframe import extract_outliers
 
 
 logger = logging.getLogger(f'{settings.APP_LOGGER_NAME}.MonitorAlertUseCase')
@@ -51,36 +52,6 @@ class MonitorAlertUseCase:
                 ts_between=(ts_start, ts_end),
             )
         )
-
-    def extract_suspicious_data(
-        self,
-        data: List[Tuple[int, Union[int, float]]],
-        start_value: Union[int, float],
-        threshold: Union[int, float],
-        interval: int,
-    ) -> Optional[List[Tuple[int, float]]]:
-        logger.debug('data', extra={'data': data})
-        itimes = 0
-        value_threshold = start_value + (start_value * threshold / 100)
-        threshold_data = []
-        for j in range(len(data)):
-            value = data[j][1]
-            increment = (value / start_value * 100) - 100
-            logger.debug(
-                f'Comparing value `{value}` againts value_threshold `{value_threshold}`'
-                f' increment `{increment}%`'
-                f' itimes `{itimes}`'
-            )
-            if value > value_threshold:
-                threshold_data.append(data[j])
-                itimes += 1
-            else:
-                itimes = 0
-
-        if itimes >= interval:
-            logger.warning('Suspicious data')
-            return threshold_data
-        return None
 
     async def _execute(self) -> Optional[List[Tuple[int, float]]]:
         logger.info('Checking the MonitorAlertUseCase')
@@ -130,10 +101,7 @@ class MonitorAlertUseCase:
         else:
             first_value = _first_value
 
-        # TODO: fix data typing
-        suspicious_data = self.extract_suspicious_data(
-            data, first_value, self.monitor.threshold, self.monitor.interval_to_check
-        )
+        suspicious_data = extract_outliers(first_value, data, self.monitor.threshold, self.monitor.interval_to_check)
         if suspicious_data:
             # TODO: More info for logging
             logger.warning(f'Suspicious {self.monitor.id} checking {self.monitor.monitor.monitor_type}')
