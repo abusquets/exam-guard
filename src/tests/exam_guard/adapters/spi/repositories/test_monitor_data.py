@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.app_container import AppContainer
 from exam_guard.domain.ports.repositories.monitor_data import MonitorDataFilter
-from exam_guard.infra.database.sqlalchemy.models import monitor_data, monitors
+from exam_guard.infra.database.sqlalchemy.models import monitor_data, monitor_types, monitors
 
 
 fake = Faker()
@@ -17,9 +17,35 @@ AsyncSessionCtxT = Callable[[], AsyncContextManager[AsyncSession]]
 
 
 @pytest_asyncio.fixture(scope='function')
-async def monitors_example(async_session_maker: AsyncSessionCtxT) -> AsyncGenerator[dict, None]:
+async def monitor_type_example(async_session_maker: AsyncSessionCtxT) -> AsyncGenerator[dict, None]:
+    monitor_type_uuid = uuid_lib.uuid4()
+    data = {
+        'uuid': monitor_type_uuid,
+        'name': fake.name(),
+        'monitor_type': 'heart-rate',
+        'frequency': 1,
+        'sku': '1234567890',
+    }
+
+    async with async_session_maker() as session:
+        statement = monitor_types.insert().values(**data)
+        await session.execute(statement)
+        await session.commit()
+        yield data
+        stmt = monitor_data.delete()
+        await session.execute(stmt)
+        stmt = monitors.delete()
+        await session.execute(stmt)
+        stmt = monitor_types.delete()
+        await session.execute(stmt)
+
+
+@pytest_asyncio.fixture(scope='function')
+async def monitors_example(
+    async_session_maker: AsyncSessionCtxT, monitor_type_example: Dict[str, Any]
+) -> AsyncGenerator[dict, None]:
     eui = uuid_lib.uuid4()
-    data = {'eui': eui, 'name': fake.name(), 'monitor_type': 'heart-rate', 'interval': 1}
+    data = {'eui': eui, 'monitor_type_id': monitor_type_example['uuid']}
 
     async with async_session_maker() as session:
         statement = monitors.insert().values(**data)
