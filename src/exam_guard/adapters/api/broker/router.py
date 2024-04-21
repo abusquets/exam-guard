@@ -9,7 +9,6 @@ from faststream.rabbit.fastapi import (
     RabbitRouter,
 )
 
-from app.app_container import AppContainer
 from config import settings
 from exam_guard.domain.ports.repositories.monitor_data import AbstractMonitorDataRepository
 from exam_guard.domain.services.monitor_data import MonitorDataService
@@ -62,12 +61,6 @@ async def declare(_: FastAPI) -> None:
     await _errors_queue.bind(_errors_exchange, routing_key='errors-key')
 
 
-# TODO: temporary solution, waiting for help
-# https://github.com/airtai/faststream/discussions/1387
-def get_monitor_data_repository() -> AbstractMonitorDataRepository:
-    return AppContainer().monitor_data_repository
-
-
 # Is not possible to register the function manually due this error:
 # TypeError: subscribe() missing 1 required positional argument: 'handler'
 # pydantic.errors.PydanticUndefinedAnnotation: name 'AnyDict' is not defined
@@ -76,11 +69,6 @@ def get_monitor_data_repository() -> AbstractMonitorDataRepository:
 async def handle_event(
     input: MonitorDataInDTO,
     msg: RabbitMessage,
-    # monitor_data_repository: Annotated[
-    #     AbstractMonitorDataRepository, Depends(
-    #         lambda: AppContainer().monitor_data_repository
-    #     )
-    # ],
     # See: https://github.com/airtai/faststream/discussions/1387
     monitor_data_repository: Annotated[AbstractMonitorDataRepository, Depends()],
     logger: Logger,
