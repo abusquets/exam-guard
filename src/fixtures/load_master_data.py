@@ -13,25 +13,45 @@ async def populate() -> None:
     sqls = [
         """
     INSERT INTO
-    monitors (eui, name, monitor_type, interval)
+    monitor_types (uuid, name, monitor_type, sku, frequency)
     VALUES
     (
-        '6ea67f1e-fc9b-4c36-a808-21259b93f8f9',
+        '669b8e22-c30b-4999-9098-6f5349f0fd09',
         'Samsung X1-S',
         'heart-rate',
+        'X10001',
         60
     ),
     (
-        '77c91e84-838e-4699-ab6d-a85e4b9db69f',
+        '05ac3e78-f653-4e99-8d25-38a1f2648b37',
         'Polar MX2',
         'heart-rate',
+        'MX2001',
         1
     ),
     (
-        '539c9710-90d2-407b-89fb-643a6637506a',
+        'b782640c-a305-4b95-a7fa-7d3f9593b2d6',
         'Samsung BPA',
         'blood-pressure',
+        'BPA001',
         1
+    );
+    """,
+        """
+    INSERT INTO
+    monitors (eui, monitor_type_id)
+    VALUES
+    (
+        '6ea67f1e-fc9b-4c36-a808-21259b93f8f9',
+        '669b8e22-c30b-4999-9098-6f5349f0fd09'
+    ),
+    (
+        '77c91e84-838e-4699-ab6d-a85e4b9db69f',
+        '05ac3e78-f653-4e99-8d25-38a1f2648b37'
+    ),
+    (
+        '539c9710-90d2-407b-89fb-643a6637506a',
+        'b782640c-a305-4b95-a7fa-7d3f9593b2d6'
     );
     """,
         """
@@ -46,7 +66,7 @@ async def populate() -> None:
     """,
         """
     INSERT INTO
-        students_register_monitors (student_register_id, monitor_id, value_xpath, interval, threshold, end_subtstract)
+        students_register_monitors (student_register_id, monitor_id, value_xpath, interval, threshold, move_end_to)
     VALUES
     (
         '82f25a6e-87e4-4b67-b111-8648cf5b9479',

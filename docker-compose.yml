@@ -85,10 +85,10 @@ services:
       - ./src/:/app:cached
     command:
       - /bin/sh
-      # - -c
-      # - |
-      #   /wait && watchmedo auto-restart --directory=/app --pattern="*.py;*.yaml" --recursive -- \
-      #   /bin/bash -c 'sleep 5; python app/worker.py'
+      - -c
+      - |
+        /wait && watchmedo auto-restart --directory=/app --pattern="*.py;*.yaml" --recursive -- \
+        /bin/bash -c 'sleep 5; python app/worker.py'
 
   postgres:
     container_name: exam-guard-postgres

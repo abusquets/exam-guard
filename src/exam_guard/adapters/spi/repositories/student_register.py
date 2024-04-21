@@ -2,6 +2,7 @@ from typing import List, cast
 
 from sqlalchemy.orm import registry, relationship
 
+from exam_guard.adapters.spi.repositories import monitor_data  # noqa
 from exam_guard.domain.entities.monitor import MonitorEntity
 from exam_guard.domain.entities.student_register import MonitorRegisterEntity, StudentRegisterEntity
 from exam_guard.domain.ports.repositories.student_register import (
@@ -13,7 +14,6 @@ from shared.repository.sqlalchemy import SqlAlchemyReadRepository
 
 
 mapper_registry = registry()
-mapper_registry.map_imperatively(MonitorEntity, monitors)
 mapper_registry.map_imperatively(
     MonitorRegisterEntity,
     students_register_monitors,

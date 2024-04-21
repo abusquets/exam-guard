@@ -13,7 +13,7 @@ class MonitorRegisterEntity:
     # TODO: change to interval_to_check, but first need to fix the database
     interval: int
     threshold: float
-    end_subtstract: int = 0
+    move_end_to: int = 0
 
     @property
     def interval_to_check(self) -> int:

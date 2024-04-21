@@ -2,6 +2,7 @@ from typing import List, Optional, cast
 
 from sqlalchemy.orm import registry
 
+from exam_guard.adapters.spi.repositories import monitor  # noqa
 from exam_guard.domain.entities.monitor_data import MonitorDataEntity
 from exam_guard.domain.ports.repositories.monitor_data import AbstractMonitorDataRepository, MonitorDataFilter
 from exam_guard.infra.database.sqlalchemy.models import monitor_data

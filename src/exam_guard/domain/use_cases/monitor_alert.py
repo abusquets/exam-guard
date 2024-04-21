@@ -24,7 +24,7 @@ class MonitorAlertUseCase:
 
     def setup(self, monitor: MonitorRegisterEntity) -> None:
         if self._monitor:
-            logger.warning(f'Error: Monitor `{monitor.monitor.name}` already set up.')
+            logger.warning(f'Error: Monitor `{monitor.monitor.monitor_type.name}` already set up.')
             raise ValueError('Error: Monitor already set up.')
         self._monitor = monitor
 
@@ -41,7 +41,7 @@ class MonitorAlertUseCase:
                 MonitorDataFilter(monitor_id=self.monitor.monitor.eui)
             )
         if not self._first_value:
-            logger.warning(f'No data found for monitor `{self.monitor.monitor.name}`')
+            logger.warning(f'No data found for monitor `{self.monitor.monitor.monitor_type.name}`')
         return self._first_value
 
     async def get_monitor_data(self, monitor_id: uuid_lib.UUID, ts_start: int, ts_end: int) -> List[MonitorDataEntity]:
@@ -92,13 +92,13 @@ class MonitorAlertUseCase:
 
         logger.debug(f'First data value `data`: {first_item.data}')
 
-        ts_end = int(time.time()) - self.monitor.end_subtstract
-        subtract_interval = (
-            self.monitor.monitor.interval if self.monitor.monitor.interval > self._sample_rate else self._sample_rate
+        ts_end = int(time.time()) - self.monitor.move_end_to
+        to_rest = (
+            self.monitor.monitor.monitor_type.frequency
+            if self.monitor.monitor.monitor_type.frequency > self._sample_rate
+            else self._sample_rate
         )
-
-        # self.monitor.interval -> means the current monitoring interval
-        ts_start = ts_end - self.monitor.interval - subtract_interval
+        ts_start = ts_end - self.monitor.interval - to_rest
 
         logger.debug(f'DIFF {ts_end - ts_start}')
         logger.debug(f'FROM {datetime.datetime.fromtimestamp(ts_start)}')
@@ -117,7 +117,18 @@ class MonitorAlertUseCase:
         )
 
         data = [(item.ts, dpath.get(item.data, self.monitor.value_xpath)) for item in monitor_data]
-        first_value = dpath.get(first_item.data, self.monitor.value_xpath)
+        _first_value = dpath.get(first_item.data, self.monitor.value_xpath)
+        if not _first_value:
+            logger.warning('No first value found')
+            return None
+        if isinstance(_first_value, str):
+            try:
+                first_value = float(_first_value)
+            except ValueError:
+                logger.warning('First value is not a number')
+                return None
+        else:
+            first_value = _first_value
 
         # TODO: fix data typing
         suspicious_data = self.extract_suspicious_data(

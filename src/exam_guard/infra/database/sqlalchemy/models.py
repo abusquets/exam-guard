@@ -21,14 +21,29 @@ from sqlalchemy.sql import func
 from infra.database.sqlalchemy.sqlalchemy import metadata
 
 
+monitor_types = Table(
+    'monitor_types',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('uuid', UUID(as_uuid=True), unique=True, nullable=False, default=uuid.uuid4),
+    Column('sku', String(255), nullable=False, unique=True),
+    Column('name', String(50), nullable=False),
+    Column('monitor_type', String(50), nullable=False),
+    Column('frequency', Integer, nullable=False, default=1),
+)
+
 monitors = Table(
     'monitors',
     metadata,
     Column('id', Integer, primary_key=True),
     Column('eui', UUID(as_uuid=True), unique=True, nullable=False, default=uuid.uuid4),
-    Column('name', String(50), nullable=False),
-    Column('monitor_type', String(50), nullable=False),
-    Column('interval', Integer, nullable=False, default=1),
+    Column('monitor_type_id', UUID(as_uuid=True), nullable=False),
+    ForeignKeyConstraint(
+        ['monitor_type_id'],
+        ['monitor_types.uuid'],
+        name='fk_monitor_type_id_monitor_types',
+        ondelete='RESTRICT',
+    ),
 )
 
 monitor_data = Table(
@@ -68,5 +83,5 @@ students_register_monitors = Table(
     Column('value_xpath', String(255), nullable=False),
     Column('threshold', Float, nullable=False),
     Column('interval', Integer, nullable=False),
-    Column('end_subtstract', Integer, nullable=False, default=0),
+    Column('move_end_to', Integer, nullable=False, default=0),
 )

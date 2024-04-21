@@ -1,9 +1,15 @@
 import datetime
+import logging
 import math
 import time
 from typing import List, Literal, Tuple
 
 import pandas as pd
+
+from config import settings
+
+
+logger = logging.getLogger(f'{settings.APP_LOGGER_NAME}.dataframe')
 
 
 def to_timestamp_seconds(year: int, month: int, day: int, hour: int, minute: int, second: int) -> int:
