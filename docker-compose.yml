@@ -148,9 +148,14 @@ services:
     build:
       context: ./jupyter
       dockerfile: Dockerfile
-      # args:
-      #   POETRY_DEV: ${POETRY_DEV:-true}
-      #   WAIT_BIN: ${WAIT_BIN:-wait}
+    environment:
+      LOADFIXTURES: false
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-exam_guard}:${POSTGRES_PASSWORD:-exam_guard}@${DB_HOST:-postgres}:5432/${POSTGRES_DB:-exam_guard}
+      WAIT_HOSTS: postgres:5432
+      WAIT_LOGGER_LEVEL: debug
+      WAIT_TIMEOUT: 60
+      WAIT_SLEEP_INTERVAL: 5
+      PYDEVD_DISABLE_FILE_VALIDATION: 1
     ports:
       - 8888:8888
     command:
