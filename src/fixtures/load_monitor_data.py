@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import time
 from typing import Callable, List, Tuple, Union
 
 from sqlalchemy import text
@@ -71,20 +72,23 @@ async def truncate(conn: AsyncConnection) -> None:
     await conn.execute(text(sql))
 
 
-async def populate_polar_mx_payload(conn: AsyncConnection) -> None:
+async def populate_polar_mx_payload(conn: AsyncConnection, ts_start: int) -> None:
     example = nine_minutes_heart_rate()
+    example = [(ts_start + ts, value) for ts, value in example]
     data = expand_to_3_hours(example)
     await sql_insert_monitor_data(conn, POLAR_MX, data, polar_mx_payload)
 
 
-async def populate_samsung_bpa_payload(conn: AsyncConnection) -> None:
+async def populate_samsung_bpa_payload(conn: AsyncConnection, ts_start: int) -> None:
     example = nine_minutes_blood_pressure()
+    example = [(ts_start + ts, value) for ts, value in example]
     data = expand_to_3_hours(example)
     await sql_insert_monitor_data(conn, SAMSUNG_BPA, data, samsung_bpa_payload)
 
 
-async def populate_samsung_x1s_payload(conn: AsyncConnection) -> None:
+async def populate_samsung_x1s_payload(conn: AsyncConnection, ts_start: int) -> None:
     example = nine_minutes_heart_rate_x_minute()
+    example = [(ts_start + ts, value) for ts, value in example]
     data = expand_to_3_hours(example, unit=60)
     await sql_insert_monitor_data(conn, SAMSUNG_X1S, data, samsung_x1s_payload)
 
@@ -93,9 +97,10 @@ async def main() -> None:
     async with engine.begin() as conn:
         await truncate(conn)
     async with engine.begin() as conn:
-        task0 = asyncio.create_task(populate_samsung_x1s_payload(conn))
-        task1 = asyncio.create_task(populate_polar_mx_payload(conn))
-        task2 = asyncio.create_task(populate_samsung_bpa_payload(conn))
+        ts_start = int(time.time())
+        task0 = asyncio.create_task(populate_samsung_x1s_payload(conn, ts_start))
+        task1 = asyncio.create_task(populate_polar_mx_payload(conn, ts_start))
+        task2 = asyncio.create_task(populate_samsung_bpa_payload(conn, ts_start))
         await asyncio.gather(task0, task1, task2)
 
 

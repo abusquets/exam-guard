@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from typing import List
 
 import aiohttp
@@ -24,20 +25,23 @@ async def truncate(conn: AsyncConnection) -> None:
     await conn.execute(text(sql))
 
 
-async def populate_polar_mx_payload() -> list:
+async def populate_polar_mx_payload(ts_start: int) -> list:
     example = nine_minutes_heart_rate()
+    example = [(ts_start + ts, value) for ts, value in example]
     data = expand_to_3_hours(example)
     return [polar_mx_payload(ts, value) for ts, value in data]
 
 
-async def populate_samsung_bpa_payload() -> list:
+async def populate_samsung_bpa_payload(ts_start: int) -> list:
     example = nine_minutes_heart_rate_x_minute()
+    example = [(ts_start + ts, value) for ts, value in example]
     data = expand_to_3_hours(example)
     return [samsung_bpa_payload(ts, value) for ts, value in data]
 
 
-async def populate_samsung_x1s_payload() -> list:
+async def populate_samsung_x1s_payload(ts_start: int) -> list:
     example = nine_minutes_heart_rate_x_minute()
+    example = [(ts_start + ts, value) for ts, value in example]
     data = expand_to_3_hours(example, unit=60)
     return [samsung_x1s_payload(ts, value) for ts, value in data]
 
@@ -62,9 +66,11 @@ async def send_data_to_endpoint_in_batches(data_payloads: List[dict], batch_size
 async def main() -> None:
     async with engine.begin() as conn:
         await truncate(conn)
-    task0 = populate_samsung_x1s_payload()
-    task1 = populate_polar_mx_payload()
-    task2 = populate_samsung_bpa_payload()
+
+    ts_start = int(time.time())
+    task0 = populate_samsung_x1s_payload(ts_start)
+    task1 = populate_polar_mx_payload(ts_start)
+    task2 = populate_samsung_bpa_payload(ts_start)
     data0, data1, data2 = await asyncio.gather(task0, task1, task2)
 
     await send_data_to_endpoint_in_batches(data0 + data1 + data2)
