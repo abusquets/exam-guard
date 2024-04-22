@@ -79,6 +79,8 @@ def extract_outliers(
     threshold: Union[int, float],
     interval: int,
 ) -> Optional[List[Tuple[int, float]]]:
+    # TODO: Refactor to support more than one outlier
+    # See notebook version for more details
     logger.debug('data', extra={'data': data})
     itimes = 0
     value_threshold = start_value + (start_value * threshold / 100)

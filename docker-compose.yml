@@ -61,6 +61,7 @@ services:
     ports:
       - 8001:80
     # command: ["sh", "-c", "/wait && bash -c '/entrypoint.sh run-asgi'"]
+    # Disable
     command: ["sh"]
     # restart: on-failure
 
@@ -138,7 +139,7 @@ services:
 
     ports:
       - 5672:5672 # AMQP protocol port
-      - 15672:15672 # HTTP management UI
+      - 15673:15672 # HTTP management UI
     volumes:
       - rabbit_data:/var/lib/rabbitmq/mnesia:delegated # Persistent local volume
       - ./rabbit.conf:/etc/rabbitmq/rabbitmq.conf # RabbitMQ configuration file
@@ -156,6 +157,9 @@ services:
       WAIT_TIMEOUT: 60
       WAIT_SLEEP_INTERVAL: 5
       PYDEVD_DISABLE_FILE_VALIDATION: 1
+    depends_on:
+      - base_image
+      - postgres
     ports:
       - 8888:8888
     command:
