@@ -33,7 +33,7 @@ class StudentMonitoringUseCase:
     def inform_suspicious(self) -> None:
         logger.warning(f'Suspicious data for student {self.student_register.student}')
 
-    async def execute(self) -> None:
+    async def execute(self, current_ts: Optional[int] = None) -> None:
         """
         This method will be responsible for checking the student's data.
         To minimize the working tasks we start by checking data from
@@ -68,7 +68,7 @@ class StudentMonitoringUseCase:
                     logger.debug('Destroying monitor...')
                     del obj
 
-        tasks = [monitor.execute() for monitor in self._registered_monitors.values()]
+        tasks = [monitor.execute(current_ts) for monitor in self._registered_monitors.values()]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         logger.debug(
             f'Checking the student: {self.student_register.student}... Done',

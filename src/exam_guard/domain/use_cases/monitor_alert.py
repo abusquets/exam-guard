@@ -53,7 +53,7 @@ class MonitorAlertUseCase:
             )
         )
 
-    async def _execute(self) -> Optional[List[Tuple[int, float]]]:
+    async def _execute(self, current_ts: Optional[int] = None) -> Optional[List[Tuple[int, float]]]:
         logger.info('Checking the MonitorAlertUseCase')
 
         first_item = await self.get_first_value()
@@ -62,8 +62,9 @@ class MonitorAlertUseCase:
             return None
 
         logger.debug(f'First data value `data`: {first_item.data}')
-
-        ts_end = int(time.time()) - self.monitor.move_end_to
+        if current_ts is None:
+            current_ts = int(time.time())
+        ts_end = current_ts - self.monitor.move_end_to
         to_rest = (
             self.monitor.monitor.monitor_type.frequency
             if self.monitor.monitor.monitor_type.frequency > self._sample_rate
@@ -107,9 +108,9 @@ class MonitorAlertUseCase:
             logger.warning(f'Suspicious {self.monitor.id} checking {self.monitor.monitor.monitor_type}')
         return suspicious_data
 
-    async def execute(self) -> Optional[List[Tuple[int, float]]]:
+    async def execute(self, current_ts: Optional[int] = None) -> Optional[List[Tuple[int, float]]]:
         try:
-            return await self._execute()
+            return await self._execute(current_ts)
         except Exception as e:
             logger.error(f'Error on MonitorAlertUseCase: {e}', exc_info=True)
             return None
