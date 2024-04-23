@@ -4,6 +4,8 @@ line-length = 120
 
 extend-exclude = ["!**", ".history", "versions"]
 
+extend-include = ["*.ipynb"]
+
 # flake8 previously used the following codes:
 # E701 E231 E225 E999 W503 E251 C901 I004 E800 B008 B024 B026 B028
 target-version = "py312"
@@ -152,7 +154,7 @@ faker = "22.0.0"
 anyio = "^4.2.0"
 pytest = "^7.4.4"
 dpath = "^2.1.6"
-faststream = {extras = ["rabbit"], version = "^0.5.2"}
+faststream = { extras = ["rabbit"], version = "^0.5.2" }
 fast-depends = "^2.4.2"
 aiohttp = "^3.9.4"
 pandas = "^2.2.2"
