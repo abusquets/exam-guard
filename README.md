@@ -31,6 +31,5 @@ To observe what's happening, open http://localhost:15672/#/queues in your web br
 
 # TODO:
 - Finish Monitoring UseCases (Add rules)
-  - Check monitor time units
-- Do the alerts using Pandas
-- Add comman to requeue error messages
+- Use datetime instead of unixtime
+- Add client in React to follow the monitor via websocket
