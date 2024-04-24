@@ -26,3 +26,4 @@ class StudentRegisterEntity:
     student: str
     active: bool
     monitors: List[MonitorRegisterEntity] = field(default_factory=list)
+    rules: List[str] = field(default_factory=list)

@@ -17,6 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from sqlalchemy.types import ARRAY
 
 from infra.database.sqlalchemy.sqlalchemy import metadata
 
@@ -72,6 +73,7 @@ students_register = Table(
     Column('uuid', UUID(as_uuid=True), unique=True, nullable=False, default=uuid.uuid4),
     Column('student', String(50), nullable=False),
     Column('active', Boolean, nullable=False, default=True),
+    Column('rules', ARRAY(String), nullable=False, default=list),
 )
 
 students_register_monitors = Table(

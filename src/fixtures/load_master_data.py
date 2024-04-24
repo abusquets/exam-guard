@@ -56,12 +56,13 @@ async def populate() -> None:
     """,
         """
     INSERT INTO
-    students_register (uuid, student, active)
+    students_register (uuid, student, active, rules)
     VALUES
     (
         '82f25a6e-87e4-4b67-b111-8648cf5b9479',
         '77914904G',
-        true
+        true,
+        ARRAY['(ts_start_0 > ts_start_1) and ((ts_start_0 - ts_start_1) >= 60)']
     );
     """,
         """
