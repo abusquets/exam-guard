@@ -1,12 +1,13 @@
 import asyncio
 import logging
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from config import settings
 from exam_guard.domain.entities.student_register import StudentRegisterEntity
 from exam_guard.domain.ports.repositories.monitor_data import AbstractMonitorDataRepository
 from exam_guard.domain.use_cases.monitor_alert import MonitorAlertUseCase
+from utils.parse_eval import VariablesType, eval_expr
 
 
 logger = logging.getLogger(f'{settings.APP_LOGGER_NAME}.StudentMonitoringUseCase')
@@ -69,7 +70,7 @@ class StudentMonitoringUseCase:
                     del obj
 
         tasks = [monitor.execute(current_ts) for monitor in self._registered_monitors.values()]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results: Optional[List[Optional[List[Tuple[int, float]]]]] = await asyncio.gather(*tasks)
         logger.debug(
             f'Checking the student: {self.student_register.student}... Done',
             extra={
@@ -83,7 +84,24 @@ class StudentMonitoringUseCase:
         # We should rules in the future compare the results between
         # the monitors
         if results and all(results):
-            self.inform_suspicious()
+            checks = []
+            variables: VariablesType = {}
+            for i in range(len(results)):
+                row = results[i]
+                if not row:
+                    continue
+                start = row[0]
+                end = row[-1]
+                variables[f'ts_start_{i}'] = start[0]
+                variables[f'ts_end_{i}'] = end[0]
+                variables[f'value_start_{i}'] = start[1]
+                variables[f'value_end_{i}'] = end[1]
+
+            for rule in self._student_register.rules:
+                checks.append(eval_expr(rule, variables))
+
+            if checks and all(checks):
+                self.inform_suspicious()
 
         elapsed_time = time.time() - start_time
         logger.info(f'Finished checking the student: {self.student_register.student}' f' in {elapsed_time:.2f} seconds')
