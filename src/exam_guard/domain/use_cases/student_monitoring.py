@@ -98,7 +98,12 @@ class StudentMonitoringUseCase:
                 variables[f'value_end_{i}'] = end[1]
 
             for rule in self._student_register.rules:
-                checks.append(eval_expr(rule, variables))
+                res = False
+                try:
+                    res = eval_expr(rule, variables)
+                except Exception as e:
+                    logger.error(f'Error evaluating rule: {rule}', exc_info=e)
+                checks.append(res)
 
             if checks and all(checks):
                 self.inform_suspicious()
