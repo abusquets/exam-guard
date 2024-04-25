@@ -30,6 +30,7 @@ To observe what's happening, open http://localhost:15672/#/queues in your web br
 
 
 # TODO:
-- Finish Monitoring UseCases (Add rules)
+- Finish Monitoring UseCases
+  - Add alert via events
 - Use datetime instead of unixtime
 - Add client in React to follow the monitor via websocket
